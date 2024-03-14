@@ -1,0 +1,319 @@
+import time as t
+import requests
+import pyodbc
+import os
+import sqlalchemy as db
+import smtplib
+
+from sqlalchemy import func
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+import pandas as pd
+from pandas import Series, DataFrame
+from datetime import datetime, date
+import win32com.client as win32
+
+## Variables----------------------------------------------------
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+DATABASE_NAME = 'elhaynes'
+filename = "PreCollege_GoogleSheet_Sync Log {}.txt".format(date.today())
+ERROR_LOG_FILENAME = os.path.join(os.getcwd(),'Logs', filename)
+
+
+##Functions------------------------------------------------------
+
+def log_this(request_error):
+    with open(ERROR_LOG_FILENAME, 'a+') as f:
+        f.write('{}:    {}\n'.format(datetime.now().time(), request_error))
+    f.close
+
+def send_error(message):
+    outlook = win32.Dispatch('outlook.application')
+    mail = outlook.CreateItem(0)
+    mail.To = 'swulsin@elhaynes.org'
+    mail.Subject = 'Error Occurred in Python Script'
+    mail.Body = message
+    mail.Send()
+   
+def start_connection_with_IC():
+   
+    user = 'swulsin'
+    passw = os.getenv('IC_SQL_PASSWORD')
+    host = 'elhaynes.infinitecampus.org'
+    port = '7771'
+
+    # Connect to the IC SQL Database
+    engine = db.create_engine('mssql+pyodbc://{}:{}@{}:{}/{}?driver=ODBC+Driver+17+for+SQL+Server'.format(user, passw, host, port, DATABASE_NAME))
+    connection = engine.connect()
+    metadata = db.MetaData()
+    print('connection started')
+    log_this('connection started')
+    return connection, engine, metadata
+
+
+def Get_data_from_SQL(tableName, METADATA, ENGINE, CONNECTION):
+    tableData = db.Table(tableName, METADATA, autoload=True, autoload_with=ENGINE, schema='elhCustom')
+    query = db.select([tableData])
+    ResultProxy = CONNECTION.execute(query)
+    ResultSet = ResultProxy.fetchall()
+    df = pd.DataFrame(ResultSet)
+    df.columns = ResultSet[0].keys()
+    return df
+
+
+def delete_this_table_data(tablename):
+    CONNECTION.execution_options(autocommit=True).execute("""TRUNCATE TABLE elhcustom.{}""".format(tablename))
+    print('data deleted from ', tablename)
+    log_this('data deleted from '+ tablename)
+
+def declare_database_table(tablename):
+    t = db.Table(tablename, METADATA, autoload=True, autoload_with=ENGINE, schema='elhCustom')
+    print('table declared: ', tablename)
+    log_this('table declared: '+ tablename)
+    return t
+
+
+def insert_data_into_database(tablename, data, t):
+    CONNECTION.execute(t.insert(), data)
+    print('data inserted to: ', tablename)
+    log_this('data inserted to: '+ tablename)
+
+
+def get_google_sheet(SPREADSHEET_ID, RANGE_NAME):
+    """Shows basic usage of the Sheets API.
+    Prints values from a sample spreadsheet.
+    """
+    print('Getting data from ' + RANGE_NAME)
+    log_this('Getting data from ' + RANGE_NAME)
+    creds = None
+    # The file token.pickle stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(creds, token)
+
+    service = build('sheets', 'v4', credentials=creds)
+    print('a')
+    # Call the Sheets API
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
+    values = result.get('values', [])
+    print('b')
+    frame = pd.DataFrame(values, columns = values[0])
+    frame2 = frame.drop(0)
+    print('c')
+    return(frame2)
+
+
+def sync_google_sheet(SPREADSHEET_ID, RANGE_NAME, table):
+    frame = get_google_sheet(SPREADSHEET_ID, RANGE_NAME)
+    print('data retrieved from '+ RANGE_NAME)
+    log_this('data retrieved from '+ RANGE_NAME)
+    frame.to_sql(table, con=ENGINE, schema = 'elhcustom', if_exists='replace')
+    print('data sent to SQL table ' + table)
+    log_this('data sent to SQL table ' + table)
+   
+def Create_Service(client_secret_file, api_service_name, api_version, *scopes):
+    global service
+    SCOPES = [scope for scope in scopes[0]]
+    #print(SCOPES)
+   
+    cred = None
+
+    if os.path.exists('token_write.pickle'):
+        with open('token_write.pickle', 'rb') as token:
+            cred = pickle.load(token)
+
+    if not cred or not cred.valid:
+        if cred and cred.expired and cred.refresh_token:
+            cred.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, SCOPES)
+            cred = flow.run_local_server()
+
+        with open('token_write.pickle', 'wb') as token:
+            pickle.dump(cred, token)
+
+    try:
+        service = build(api_service_name, api_version, credentials=cred)
+        print(api_service_name, 'service created successfully')
+        #return service
+    except Exception as e:
+        print(e)
+        #return None
+
+def Export_Data_To_Sheets(SPREADSHEET_ID, RANGE, DATA_FRAME):
+    Create_Service('credentials.json', 'sheets', 'v4',['https://www.googleapis.com/auth/spreadsheets'])
+    response_date = service.spreadsheets().values().update(
+        spreadsheetId=SPREADSHEET_ID,
+        valueInputOption='RAW',
+        range=RANGE,
+        body=dict(
+            majorDimension='ROWS',
+            values=DATA_FRAME.T.reset_index().T.values.tolist())
+    ).execute()
+    print(RANGE, ' successfully Updated')
+    log_this(RANGE + ' successfully Updated')
+
+   
+def Clear_Google_Sheet(SPREADSHEET_ID, RANGE):
+    Create_Service('credentials.json', 'sheets', 'v4',['https://www.googleapis.com/auth/spreadsheets'])
+    #from googleapiclient import discovery
+    print('j')
+
+    request = service.spreadsheets().values().clear(spreadsheetId=SPREADSHEET_ID, range=RANGE, body={})
+    print('l')
+
+    response = request.execute()
+    print(response)
+    print(RANGE, ' cleared')
+    log_this(RANGE + ' cleared')
+   
+##Main Program -----------------------------------------------------------------
+
+CONNECTION, ENGINE, METADATA = start_connection_with_IC()
+start = t.time()
+print('started at ', start)
+try:
+   
+    sync_google_sheet('1sqZ3hDjKfn_DSX-bE3KU8Abb3Z-_q192Opcz_f1Uck0', 'PreCollege Tracker!A2:N1053', 'PreCollege_Tracker')
+
+
+    #Get data from SQL
+    studentList = Get_data_from_SQL('v_PreCollege_StudentList', METADATA, ENGINE, CONNECTION)
+    studentList_sorted = studentList.sort_values(by=['cohortYearNCLB', 'FullName'])
+    programList = Get_data_from_SQL('v_PreCollege_ProgramList', METADATA, ENGINE, CONNECTION)
+    programList_sorted = programList.sort_values(by=['Seq', 'Activity'])  
+    whenList = Get_data_from_SQL('v_PreCollege_WhenList', METADATA, ENGINE, CONNECTION)
+    whenList_sorted = whenList.sort_values(by=['Seq'])  
+   
+    print(whenList_sorted)
+   
+    #Write to GSheet
+    Clear_Google_Sheet('1sqZ3hDjKfn_DSX-bE3KU8Abb3Z-_q192Opcz_f1Uck0', 'StudentList!A1:E10000')
+    Export_Data_To_Sheets('1sqZ3hDjKfn_DSX-bE3KU8Abb3Z-_q192Opcz_f1Uck0', 'StudentList!A1:E10000', studentList_sorted)
+    Export_Data_To_Sheets('1sqZ3hDjKfn_DSX-bE3KU8Abb3Z-_q192Opcz_f1Uck0', 'ProgramList!A1:C1000', programList_sorted)
+    Export_Data_To_Sheets('1sqZ3hDjKfn_DSX-bE3KU8Abb3Z-_q192Opcz_f1Uck0', 'WhenList!A1:C100', whenList_sorted)
+   
+    #Run Stored Procedure
+    CONNECTION.execution_options(autocommit=True).execute("EXEC elhcustom.sp_PreCollegeSync")
+    print("EXEC elhcustom.sp_PreCollegeSync")
+    log_this('EXEC elhcustom.sp_PreCollegeSync')
+   
+   
+   
+except Exception as error_message:
+    log_this('Error')
+    print('Error')
+    #send_error(filename + ' ' + str(datetime.now()))
+    print('sent email')
+    ERROR_LOG_FILENAME = os.path.join(os.getcwd(),'Logs', 'ERROR ' + filename)
+    log_this('Error')
+
+
+end = t.time()
+print('duration (min): ', (end - start)/60)
+log_this('duration (min): ' + str((end - start)/60))
+---------------------------------------------------------------------------------------------------
+from PyPDF4 import PdfFileReader
+import json
+from datetime import datetime
+import os
+import glob
+
+###############################################################
+# Declare variables
+###############################################################
+
+
+
+name_offset = 7
+ID_offset = 14
+date_characters = 10
+id_characters = 7
+
+
+
+   
+def extractFilenames (fileList):
+    """get filenames from list of paths"""
+    filenameList = []
+    for file in fileList:
+        print(file)
+        filename = os.path.basename(file)
+        filenameList.append(filename)
+    return filenameList
+       
+
+
+
+ 
+   
+   
+
+
+
+"""loop through all files in working directory and rename them"""
+file_list = glob.glob(os.path.join(os.getcwd(),"*.pdf"))
+
+print(file_list)
+filename_list = extractFilenames(file_list)
+   
+for filename in filename_list:
+    print(filename)
+   
+    """renames a single file.  requires the filename and assumes working directory.  offsets and char describe where to find string in doc"""
+    #open and read file
+    file_in_use = open(filename, "rb")
+    pdf_reader = PdfFileReader(file_in_use)
+
+    page = pdf_reader.getPage(0) #info is always on page 1
+    page_content = page.extractText()
+    #print(page_content)
+     
+   #find the invoice and date locations in the text
+    id_location = page_content.find("STUDENT ID") + ID_offset
+    print(id_location)
+    id_number = page_content[id_location:id_location + id_characters]
+    print(id_number)
+
+   
+    name_location = page_content.find("NAME") + name_offset
+    GRADE_location = page_content.find("GRADE")
+
+    print(name_location)
+    name = page_content[name_location:name_location + 5]
+    print(name)
+
+
+   #create new filename
+    new_filename = id_number + '.pdf'
+    print(new_filename)
+   #close file so we can rename it
+    file_in_use.close()
+ 
+   #rename file
+    os.rename(filename,new_filename)
+    print(new_filename)
+ 
+ 
+   #invoice_date = datetime.strptime(invoice_date_string, '%m/%d/%Y') #don't need to go to date first and then back to string
