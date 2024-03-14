@@ -1,0 +1,376 @@
+1. Import to elhcustom.tempACCESSAlt
+4. Run this code
+--CHECK [Date/Time Stamp]. If it's after 6/30, use a different date or else the endyear will be messed up.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*/
+
+--DROP TABLE elhcustom.tempACCESSAlt
+--Select * FROM elhcustom.tempACCESSAlt
+select * FROM elhcustom.AssessmentsLong WHERE TestType = 'ACCESS' AND personID = 933
+IF OBJECT_ID('tempdb..#AccTemp') IS NOT NULL
+    DROP TABLE #AccTemp
+
+SELECT *
+INTO #AccTemp
+FROM (
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Composite' AS TestName
+, 'Test' AS TestScoreType
+, [Scale Score - Overall] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Overall] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Overall]
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Listening' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Listening] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Listening] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Listening]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Literacy' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Literacy] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Literacy] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Literacy]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Speaking' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Speaking] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Speaking] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Speaking]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Writing' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Writing] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Writing] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Writing]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Comprehension' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Comprehension] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Comprehension] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Comprehension]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Oral' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Oral] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Oral] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Oral]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+UNION
+
+SELECT i.personID
+,  cast(convert(char(11), [Date/Time Stamp], 113) as datetime) AS TestDate
+, 'ACCESS' AS TestType
+, 'Alt ACCESS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, t.Grade AS TestGradeLevel
+, 'Alt ACCESS Reading' AS TestName
+, 'Subscore' AS TestScoreType
+, [Scale Score - Reading] AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, [Scale Score - Reading] AS ScaleScore
+, NULL AS PercentScore
+, CASE [Proficiency Level - Reading]  
+WHEN 'A1' THEN 0.1
+WHEN 'A2' THEN 0.2
+WHEN 'A3' THEN 0.3
+WHEN 'P1' THEN 1
+WHEN 'P2' THEN 2
+WHEN 'P3' THEN 3
+ELSE NULL END
+AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH([Date/Time Stamp]) <= 6 THEN YEAR([Date/Time Stamp])
+WHEN MONTH([Date/Time Stamp]) > 6 THEN YEAR([Date/Time Stamp]) + 1
+ELSE NULL END AS EndYear
+
+FROM elhcustom.tempACCESSAlt t
+JOIN individual i ON i.stateID = t.[State Student ID]
+
+) scores
+
+
+/* Remove blank lines -----------------------------------------------------------*/
+DELETE  
+FROM  #AccTemp
+WHERE TestScore IS NULL
+
+/* View  -----------------------------------------------------------*/
+
+SELECT * FROM #AccTemp WHERE personID = 933
+--WHERE testdate IS NULL
+
+
+
+
+/*
+IV. Add AssessmentScoreIDs
+
+Get the current Maximum Assessment Score ID:
+SELECT max(AssessmentScoreID)
+From elhcustom.AssessmentsLong
+
+*/
+
+IF OBJECT_ID('tempdb..#TempAccInsert') IS NOT NULL
+    DROP TABLE #TempAccInsert
+
+SELECT ROW_NUMBER() OVER (ORDER By te.TestDate desc) +
+(
+SELECT max(AssessmentScoreID)
+FROM elhcustom.AssessmentsLong
+)
+AS AssessmentScoreID --Add the Max AssessmentScoreID here
+, *
+, 'EOY' AS testPeriod
+INTO #TempAccInsert
+FROM  #AccTemp te
+
+SELECT * FROM #TempAccInsert WHERE personID = 933 ORDER BY AssessmentScoreID
+SELECT * FROM #TempAccInsert ORDER BY personID, testdate, testname
+
+/*
+--V. Insert ANET scores into AssessmentsLong
+INSERT INTO elhcustom.AssessmentsLong
+SELECT * FROM #TempAccInsert
+*/
+
+/*
+--VII. See if there are any duplicate assessment scores
+IF OBJECT_ID('tempdb..#Combo') IS NOT NULL
+DROP TABLE #Combo
+
+select CONCAT(personID, '-', testsubtype, '-', testname, '-', testdate, '-', testsubject, '-', testscore) AS combo, assessmentscoreID
+INTO #Combo
+FROM elhcustom.assessmentslong
+
+SELECT combo, COUNT(assessmentscoreID)
+FROM #Combo
+GROUP BY combo
+ORDER BY 2 desc
+*/
+
+/*
+--VI. Remove Duplicate Assessment Scores
+; WITH CTE  as
+(
+      SELECT ROW_NUMBER() OVER (PARTITION BY personid, testsubtype, testname, testdate, testsubject, testscore  
+      ORDER BY ( SELECT 0 ) ) RN                                      
+      FROM   elhcustom.AssessmentsLong
+)
+DELETE
+FROM CTE
+WHERE  RN > 1
+*/
+
+/*
+--VII. See if there are any duplicate assessment scores
+IF OBJECT_ID('tempdb..#Combo') IS NOT NULL
+DROP TABLE #Combo
+
+select CONCAT(personID, '-', testsubtype, '-', testname, '-', testdate, '-', testsubject, '-', testscore) AS combo, assessmentscoreID
+INTO #Combo
+FROM elhcustom.assessmentslong
+
+SELECT combo, COUNT(assessmentscoreID)
+FROM #Combo
+GROUP BY combo
+ORDER BY 2 desc
+*/
