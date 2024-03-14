@@ -20,7 +20,7 @@ def merge_sheets(file1, file2, sheet1_name, sheet2_name, output_file):
                           'Transadaptation - Spanish', 'Translated in Student Native Language - Test Directions', 'Unique Accommodation',
                           'Word-to-Word Dictionary']
 
-     Update the matched rows in sheet 2 with 1 in specified columns from sheet 1
+    # Update the matched rows in sheet 2 with 1 in specified columns from sheet 1
     merged_df.loc[:, columns_to_update] = 1
 
     # Save the result to a new Excel file
