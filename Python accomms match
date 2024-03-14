@@ -1,0 +1,30 @@
+import pandas as pd
+
+def merge_sheets(file1, file2, sheet1_name, sheet2_name, output_file):
+    # Read CSV files into dataframes
+    df_sheet1 = pd.read_excel(file1, sheet_name=sheet1_name)
+    df_sheet2 = pd.read_excel(file2, sheet_name=sheet2_name)
+
+    # Merge dataframes based on the State ID and Identifier columns
+    merged_df = pd.merge(df_sheet1, df_sheet2, how='inner', left_on='State ID', right_on='Identifier')
+
+    # Columns to update with 1 if there is a match
+    columns_to_update = ['Frequent Breaks', 'Small Group Testing', 'Braille with Tactile Graphics',
+                          'Calculation Device on Non-Calculator Sections', 'Closed Captioning of Multimedia - English',
+                          'Color Contrast (Background/Font Color) - Black/Blue', 'Color Contrast (Background/Font Color) - Black/Cream',
+                          'Color Contrast (Background/Font Color) - Black/Magenta', 'Color Contrast (Background/Font Color) - Gray/Green',
+                          'Color Contrast (Background/Font Color) - White/Black', 'Color Contrast (Background/Font Color) - Yellow/Blue',
+                          'Directions in Native Language - Spanish', 'Enable Extensions', 'Extended Time', 'Human Reader/Human Signer',
+                          'Human Scribe', 'Human Signer - Test Directions', 'Large Print Edition', 'Native Language Word-to-Word Dictionary',
+                          'Paper-Based Edition', 'Specified Area or Setting', 'Temporary Accommodation', 'Text-to-Speech',
+                          'Transadaptation - Spanish', 'Translated in Student Native Language - Test Directions', 'Unique Accommodation',
+                          'Word-to-Word Dictionary']
+
+    # Update the matched rows in sheet 2 with 1 in specified columns from sheet 1
+    merged_df.loc[:, columns_to_update] = 1
+
+    # Save the result to a new Excel file
+    merged_df.to_excel(output_file, index=False)
+
+# Example usage
+merge_sheets('MLL_DC CAPE_Student accommodations_EllevationExport_20240209_0942.xlsx', 'Student Accommodation 2024-02-09T09_54_49-05_00.xlsx', 'MLL accommodations', 'Filled student accommodations', 'MLL Accommodations merged_MS.xlsx')
