@@ -1,0 +1,545 @@
+1. Got to https://mCLASS.amplify.com/reports/DownloadYourData#/
+2. View My Data > Reading > DIBELS 8th Edition
+3. Access Raw Data > Download Your Data
+DROP TABLE elhcustom.tempDIBELS
+5. Import flat file to
+SELECT * FROM elhcustom.tempDIBELS
+
+
+4. Run this code
+*/
+
+IF OBJECT_ID('tempdb..#tmpDIBELS') IS NOT NULL
+    DROP TABLE #tmpDIBELS
+
+SELECT *
+INTO #tmpDIBELS
+FROM (
+
+/* Composite */
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, Assessment_Edition AS TestName
+, 'Test' AS TestScoreType
+, Composite_Score*1.0 AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Composite_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Composite_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Composite_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Composite_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Composite_National_Norm_Percentile END AS PercentileScore
+, Composite_Score*1.0 AS ScaleScore
+, NULL AS PercentScore
+, CASE Composite_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+/* Letter Names */
+
+UNION
+
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Letter Names' AS TestName
+, 'Subscore' AS TestScoreType
+, Letter_Names_LNF_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Letter_Names_LNF_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Letter_Names_LNF_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Letter_Names_LNF_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Letter_Names_LNF_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Letter_Names_LNF_National_Norm_Percentile END AS PercentileScore
+, Letter_Names_LNF_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Letter_Names_LNF_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+/* Phonemic Awareness */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Phonemic Awareness' AS TestName
+, 'Subscore' AS TestScoreType
+, Phonemic_Awareness_PSF_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Phonemic_Awareness_PSF_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Phonemic_Awareness_PSF_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Phonemic_Awareness_PSF_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Phonemic_Awareness_PSF_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Phonemic_Awareness_PSF_National_Norm_Percentile END AS PercentileScore
+, Phonemic_Awareness_PSF_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Phonemic_Awareness_PSF_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+
+
+/* Letter Sounds*/
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Letter Sounds' AS TestName
+, 'Subscore' AS TestScoreType
+, Letter_Sounds_NWF_CLS_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Letter_Sounds_NWF_CLS_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Letter_Sounds_NWF_CLS_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Letter_Sounds_NWF_CLS_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Letter_Sounds_NWF_CLS_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Letter_Sounds_NWF_CLS_National_Norm_Percentile END AS PercentileScore
+, Letter_Sounds_NWF_CLS_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Letter_Sounds_NWF_CLS_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+
+/* Decoding */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Decoding' AS TestName
+, 'Subscore' AS TestScoreType
+, Decoding_NWF_WRC_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Decoding_NWF_WRC_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Decoding_NWF_WRC_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Decoding_NWF_WRC_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Decoding_NWF_WRC_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Decoding_NWF_WRC_National_Norm_Percentile END AS PercentileScore
+, Decoding_NWF_WRC_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Decoding_NWF_WRC_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+
+/* Word Reading */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Word Reading' AS TestName
+, 'Subscore' AS TestScoreType
+, Word_Reading_WRF_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Word_Reading_WRF_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Word_Reading_WRF_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Word_Reading_WRF_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Word_Reading_WRF_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Word_Reading_WRF_National_Norm_Percentile END AS PercentileScore
+, Word_Reading_WRF_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Word_Reading_WRF_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+
+/* Reading Accuracy */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Reading Accuracy' AS TestName
+, 'Subscore' AS TestScoreType
+, Reading_Accuracy_ORF_Accu_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Reading_Accuracy_ORF_Accu_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Reading_Accuracy_ORF_Accu_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Reading_Accuracy_ORF_Accu_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Reading_Accuracy_ORF_Accu_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Reading_Accuracy_ORF_Accu_National_Norm_Percentile END AS PercentileScore
+, Reading_Accuracy_ORF_Accu_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Reading_Accuracy_ORF_Accu_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+
+/* Reading Fluency */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Reading Fluency' AS TestName
+, 'Subscore' AS TestScoreType
+, Reading_Fluency_ORF_Score AS TestScore
+, NULL AS RawScore
+, CASE WHEN CONVERT(varchar, Reading_Fluency_ORF_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Reading_Fluency_ORF_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Reading_Fluency_ORF_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Reading_Fluency_ORF_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Reading_Fluency_ORF_National_Norm_Percentile END AS PercentileScore
+, Reading_Fluency_ORF_Score AS ScaleScore
+, NULL AS PercentScore
+, CASE Reading_Fluency_ORF_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+
+/* Reading Comprehension */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Reading Comprehension' AS TestName
+, 'Subscore' AS TestScoreType
+, Reading_Comprehension_Maze_Score AS TestScore
+, Correct_Responses_Maze_Score AS RawScore
+, CASE WHEN CONVERT(varchar, Reading_Comprehension_Maze_National_Norm_Percentile) = '<1' THEN 0
+WHEN CONVERT(varchar, Reading_Comprehension_Maze_National_Norm_Percentile) = '>99' THEN 100
+WHEN CONVERT(varchar, Reading_Comprehension_Maze_National_Norm_Percentile) = 'Discontinue' THEN NULL
+WHEN CONVERT(varchar, Reading_Comprehension_Maze_National_Norm_Percentile) = 'Tested Out' THEN NULL
+ELSE Reading_Comprehension_Maze_National_Norm_Percentile END AS PercentileScore
+, Reading_Comprehension_Maze_Score AS ScaleScore
+, CASE WHEN (CAST(Correct_Responses_Maze_Score AS INT) + CAST(Incorrect_Responses_Maze_Score AS INT)) > 0
+THEN CAST(Correct_Responses_Maze_Score AS INT) * 1.0 / (CAST(Correct_Responses_Maze_Score AS INT) + CAST(Incorrect_Responses_Maze_Score AS INT))
+ELSE NULL END AS PercentScore
+, CASE Reading_Comprehension_Maze_Level
+WHEN 'Below Benchmark' THEN 2
+WHEN 'Well Below Benchmark' THEN 1
+WHEN 'At Benchmark' THEN 3
+WHEN 'Above Benchmark' THEN 4
+ELSE NULL END AS ProficiencyLevelScore
+, CAST(Correct_Responses_Maze_Score AS INT) + CAST(Incorrect_Responses_Maze_Score AS INT) AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+/* Composite Growth */
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Year Growth' AS TestName
+, 'Growth' AS TestScoreType
+, NULL AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, NULL AS ScaleScore
+, NULL AS PercentScore
+, CASE Composite_Year_Growth
+WHEN 'Well Below Average' THEN 1
+WHEN 'Below Average' THEN 2
+WHEN 'Average' THEN 3
+WHEN 'Above Average' THEN 4
+WHEN 'Well Above Average' THEN 5
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+/*Semester Growth*/
+UNION
+SELECT i.personID
+, Client_Date AS TestDate
+, 'mCLASS' AS TestType
+, 'DIBELS' AS TestSubType
+, 'ELA' AS TestSubjectGroup
+, 'ELA' AS TestSubject
+, Assessment_Grade AS TestGradeLevel
+, 'DIBELS Semester Growth' AS TestName
+, 'Growth' AS TestScoreType
+, NULL AS TestScore
+, NULL AS RawScore
+, NULL AS PercentileScore
+, NULL AS ScaleScore
+, NULL AS PercentScore
+, CASE Composite_Semester_Growth
+WHEN 'Well Below Average' THEN 1
+WHEN 'Below Average' THEN 2
+WHEN 'Average' THEN 3
+WHEN 'Above Average' THEN 4
+WHEN 'Well Above Average' THEN 5
+ELSE NULL END AS ProficiencyLevelScore
+, NULL AS PointsPossible
+, NULL AS GradeLevelEquivalent
+, CASE WHEN MONTH(Client_Date) <= 6 THEN YEAR(Client_Date)
+WHEN MONTH(Client_Date) > 6 THEN YEAR(Client_Date) + 1
+ELSE NULL END AS EndYear
+, CASE WHEN MONTH(Client_Date) IN (8, 9, 10, 11) THEN 'BOY'
+WHEN MONTH(Client_Date) IN (12, 1, 2, 3) THEN 'MOY'
+WHEN MONTH(Client_Date) IN (4, 5, 6, 7) THEN 'EOY'
+ELSE NULL END AS testPeriod
+FROM elhcustom.tempDIBELS t
+JOIN individual i ON i.studentNumber = t.Student_Primary_ID
+
+) scores
+
+
+/* Remove blank lines -----------------------------------------------------------*/
+DELETE  
+--SELECT *
+FROM  #tmpDIBELS
+WHERE testdate IS NULL
+OR (testScore IS NULL AND ProficiencyLevelScore IS NULL)
+
+
+
+--IV. Add AssessmentScoreIDs
+--Get the current Maximum Assessment Score ID:
+SELECT max(AssessmentScoreID)
+From elhcustom.AssessmentsLong
+
+/* Insert scores for new tests only */
+
+IF OBJECT_ID('tempdb..#TempDIBELSInsert') IS NOT NULL
+DROP TABLE #TempDIBELSInsert
+SELECT ROW_NUMBER() OVER (ORDER By te.TestDate desc, te.personID, te.testName) +
+(
+SELECT max(AssessmentScoreID)
+FROM elhcustom.AssessmentsLong
+)
+AS AssessmentScoreID --Add the Max AssessmentScoreID here
+,te.*
+INTO #TempDIBELSInsert
+FROM  #tmpDIBELS te
+LEFT JOIN elhcustom.AssessmentsLong al
+ON al.personID = te.personID
+AND al.TestDate = te.TestDate
+AND al.TestSubType = te.TestSubType
+AND al.TestName = te.TestName
+--AND al.TestScore = te.TestScore
+AND al.TestSubject = te.TestSubject
+WHERE al.TestName IS NULL
+
+
+SELECT s.grade, s.FullName, te.* FROM #TempDIBELSInsert te
+JOIN elhcustom.v_student s ON s.personID = te.personID AND s.ActiveStudent = 'Y' AND summerSchool = 0
+ ORDER BY AssessmentScoreID
+
+
+
+
+ /*
+--V. Insert ANET scores into AssessmentsLong
+INSERT INTO elhcustom.AssessmentsLong
+SELECT * FROM #TempDIBELSInsert
+
+--VI. Update with new test scores
+UPDATE al
+SET al.testscore = te.testscore
+, al.RawScore = te.RawScore
+, al.percentilescore = te.percentileScore
+, al.ScaleScore = te.ScaleScore
+, al.PercentScore = te.PercentScore
+, al.ProficiencyLevelScore = te.ProficiencyLevelScore
+, al.PointsPossible = te.Points Possible
+, al.GradeLevelEquivalent = te.GradeLevelEquivalent
+--SELECT *
+FROM  #tmpDIBELS te
+LEFT JOIN elhcustom.AssessmentsLong al
+ON al.personID = te.personID
+AND al.TestDate = te.TestDate
+AND al.TestSubType = te.TestSubType
+AND al.TestName = te.TestName
+AND al.TestSubject = te.TestSubject
+WHERE al.testscore <> te.TestScore OR al.ProficiencyLevelScore <> te.ProficiencyLevelScore
+*/
+
+
+/*
+--VII. See if there are any duplicate assessment scores
+IF OBJECT_ID('tempdb..#Combo') IS NOT NULL
+DROP TABLE #Combo
+
+select CONCAT(personID, '-', testsubtype, '-', testname, '-', testdate, '-', testsubject, '-', testscore) AS combo, assessmentscoreID
+INTO #Combo
+FROM elhcustom.assessmentslong
+
+SELECT combo, COUNT(assessmentscoreID) AS Duplicates
+FROM #Combo
+GROUP BY combo
+HAVING COUNT(assessmentscoreID) >= 2
+ORDER BY 2 desc
+*/
+
+/*
+--VI. Remove Duplicate Assessment Scores
+; WITH CTE  as
+(
+      SELECT ROW_NUMBER() OVER (PARTITION BY personid, testsubtype, testname, testdate, testsubject
+--, testscore  
+      ORDER BY ( assessmentscoreID ) desc ) RN                                      
+      FROM   elhcustom.AssessmentsLong
+)
+DELETE
+FROM CTE
+WHERE  RN > 1
+*/
